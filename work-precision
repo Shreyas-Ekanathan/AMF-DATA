@@ -1,15 +1,24 @@
 
+using OrdinaryDiffEq, DiffEqDevTools, ODEInterfaceDiffEq, DifferentialEquations, Plots, Sundials
+#import AMF
+#using AMF: solve2d, FiniteDifferenceMethod as fdm
 
-```julia
-
-using OrdinaryDiffEq, DiffEqDevTools, Sundials, ModelingToolkit, ODEInterfaceDiffEq,
-      Plots, DASSL, DASKR
-using LinearAlgebra
-using AMF: solve2d, FiniteDifferenceMethod as fdm
-
-ModelingToolkit.@parameters begin
-      A = .1
-      B = .1
-      C = 0.
-      N = 100
+init_func = (x, y) -> 16 * x * y * (1 - x) * (1 - y) 
+p = 1/2
+function g(du, u, p, t)
+    @. du += u^2 * (1 - u) + exp(t)
 end
+prob = ODEProblem(g, [0.0, 1.0], tspan, p)
+probs = [prob];
+sol = solve(prob,Vern7(),abstol=1/10^14,reltol=1/10^14)
+test_sol = [sol];
+
+setups = [Dict(:prob_choice => 1, :alg=>Rosenbrock23()),
+          Dict(:prob_choice => 1, :alg=>Rodas4()),
+          Dict(:prob_choice => 1, :alg=>QNDF()),
+          Dict(:prob_choice => 1, :alg=>rodas()),
+          Dict(:prob_choice => 1, :alg=>radau()),
+          Dict(:prob_choice => 1, :alg=>RadauIIA5()),
+]
+
+plot()
